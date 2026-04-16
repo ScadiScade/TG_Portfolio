@@ -1,6 +1,8 @@
+import json
 from aiogram import Router, F
 from aiogram.types import CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 
 import db
@@ -8,6 +10,16 @@ from handlers.common import get_main_menu_keyboard, get_user_language
 from locales import get_text
 
 router = Router()
+
+class ShopState(StatesGroup):
+    viewing_item = State()
+
+OPTIONS_PRICES = {
+    "opt_admin": 5000,
+    "opt_payment": 3000,
+    "opt_deploy": 2000,
+    "opt_multi": 4000,
+}
 
 def get_shop_keyboard(lang: str):
     builder = InlineKeyboardBuilder()
@@ -28,8 +40,10 @@ async def start_shop(callback: CallbackQuery, state: FSMContext):
     )
 
 @router.callback_query(F.data == "shop_catalog")
-async def show_catalog(callback: CallbackQuery):
+async def show_catalog(callback: CallbackQuery, state: FSMContext):
     lang = await get_user_language(callback.from_user)
+    await state.clear()
+    
     items = await db.get_items()
     if not items:
         await callback.message.edit_text(get_text("catalog_empty", lang), reply_markup=get_shop_keyboard(lang))
@@ -37,15 +51,39 @@ async def show_catalog(callback: CallbackQuery):
 
     builder = InlineKeyboardBuilder()
     for item in items:
-        builder.button(text=f"{item['name']} - ${item['price']}", callback_data=f"shop_item_{item['id']}")
+        builder.button(text=f"{item['name']} - {item['price']}", callback_data=f"shop_item_{item['id']}")
     
     builder.button(text=get_text("btn_back_shop", lang), callback_data="demo_shop")
     builder.adjust(1)
     
     await callback.message.edit_text(get_text("select_item", lang), reply_markup=builder.as_markup())
 
+async def render_item_menu(message, item, selected_options, lang):
+    builder = InlineKeyboardBuilder()
+    
+    total_price = item['price']
+    
+    for opt_key, opt_price in OPTIONS_PRICES.items():
+        is_selected = selected_options.get(opt_key, False)
+        prefix = "✅ " if is_selected else "❌ "
+        if is_selected:
+            total_price += opt_price
+            
+        btn_text = prefix + get_text(opt_key, lang)
+        builder.button(text=btn_text, callback_data=f"shop_toggle_{opt_key}")
+    
+    builder.button(
+        text=get_text("btn_add_cart", lang, total=total_price),
+        callback_data="shop_do_add"
+    )
+    builder.button(text=get_text("btn_catalog", lang), callback_data="shop_catalog")
+    builder.adjust(1)
+    
+    text = f"**{item['name']}**\n\n{item['description']}\n\nPrice: {item['price']}"
+    await message.edit_text(text, parse_mode="Markdown", reply_markup=builder.as_markup())
+
 @router.callback_query(F.data.startswith("shop_item_"))
-async def show_item(callback: CallbackQuery):
+async def show_item(callback: CallbackQuery, state: FSMContext):
     lang = await get_user_language(callback.from_user)
     item_id = int(callback.data.split("_")[2])
     item = await db.get_item(item_id)
@@ -54,20 +92,49 @@ async def show_item(callback: CallbackQuery):
         await callback.answer(get_text("item_not_found", lang))
         return
 
-    builder = InlineKeyboardBuilder()
-    builder.button(text=get_text("btn_add_cart", lang), callback_data=f"shop_add_{item['id']}")
-    builder.button(text=get_text("btn_catalog", lang), callback_data="shop_catalog")
-    builder.adjust(1)
+    await state.set_state(ShopState.viewing_item)
+    await state.update_data(item_id=item_id, options={})
     
-    text = f"**{item['name']}**\n\n{item['description']}\n\nPrice: ${item['price']}"
-    await callback.message.edit_text(text, parse_mode="Markdown", reply_markup=builder.as_markup())
+    await render_item_menu(callback.message, item, {}, lang)
 
-@router.callback_query(F.data.startswith("shop_add_"))
-async def add_to_cart(callback: CallbackQuery):
+@router.callback_query(F.data.startswith("shop_toggle_"), ShopState.viewing_item)
+async def toggle_option(callback: CallbackQuery, state: FSMContext):
     lang = await get_user_language(callback.from_user)
-    item_id = int(callback.data.split("_")[2])
-    await db.add_to_cart(callback.from_user.id, item_id)
+    opt_key = callback.data.replace("shop_toggle_", "")
+    
+    data = await state.get_data()
+    options = data.get("options", {})
+    options[opt_key] = not options.get(opt_key, False)
+    await state.update_data(options=options)
+    
+    item = await db.get_item(data["item_id"])
+    await render_item_menu(callback.message, item, options, lang)
+
+@router.callback_query(F.data == "shop_do_add", ShopState.viewing_item)
+async def add_to_cart_with_options(callback: CallbackQuery, state: FSMContext):
+    lang = await get_user_language(callback.from_user)
+    data = await state.get_data()
+    item_id = data["item_id"]
+    options = data.get("options", {})
+    
+    item = await db.get_item(item_id)
+    if not item:
+        return
+        
+    total_price = item['price']
+    selected_opts_list = []
+    for k, v in options.items():
+        if v:
+            total_price += OPTIONS_PRICES[k]
+            selected_opts_list.append(get_text(k, lang))
+            
+    options_str = "\n  + " + "\n  + ".join(selected_opts_list) + "\n" if selected_opts_list else "\n"
+    
+    await db.add_to_cart(callback.from_user.id, item_id, options_str, total_price)
+    await state.clear()
+    
     await callback.answer(get_text("added_to_cart", lang), show_alert=True)
+    await show_catalog(callback, state)
 
 @router.callback_query(F.data == "shop_cart")
 async def show_cart(callback: CallbackQuery):
@@ -83,7 +150,8 @@ async def show_cart(callback: CallbackQuery):
     for item in cart_items:
         cost = item['price'] * item['quantity']
         total += cost
-        text += f"- {item['name']} (x{item['quantity']}) = ${cost}\n"
+        opts = item['options'] or ""
+        text += get_text("cart_item", lang, name=item['name'], options=opts, quantity=item['quantity'], cost=cost)
         
     text += get_text("cart_total", lang, total=total)
     
@@ -96,11 +164,11 @@ async def show_cart(callback: CallbackQuery):
     await callback.message.edit_text(text, parse_mode="Markdown", reply_markup=builder.as_markup())
 
 @router.callback_query(F.data == "shop_clear_cart")
-async def clear_cart(callback: CallbackQuery):
+async def clear_cart(callback: CallbackQuery, state: FSMContext):
     lang = await get_user_language(callback.from_user)
     await db.clear_cart(callback.from_user.id)
     await callback.answer(get_text("cart_cleared", lang))
-    await start_shop(callback, FSMContext(storage=None, key=None))
+    await start_shop(callback, state)
 
 @router.callback_query(F.data == "shop_checkout")
 async def checkout(callback: CallbackQuery):

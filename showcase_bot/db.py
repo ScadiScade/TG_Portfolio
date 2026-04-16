@@ -14,10 +14,12 @@ async def init_db():
         ''')
         await db.execute('''
             CREATE TABLE IF NOT EXISTS cart (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER,
                 item_id INTEGER,
-                quantity INTEGER DEFAULT 1,
-                PRIMARY KEY (user_id, item_id)
+                options TEXT,
+                price INTEGER,
+                quantity INTEGER DEFAULT 1
             )
         ''')
         await db.execute('''
@@ -53,21 +55,19 @@ async def get_item(item_id: int):
         async with db.execute('SELECT * FROM items WHERE id = ?', (item_id,)) as cursor:
             return await cursor.fetchone()
 
-async def add_to_cart(user_id: int, item_id: int):
+async def add_to_cart(user_id: int, item_id: int, options: str, price: int):
     async with aiosqlite.connect(DB_NAME) as db:
         await db.execute('''
-            INSERT INTO cart (user_id, item_id) 
-            VALUES (?, ?) 
-            ON CONFLICT(user_id, item_id) 
-            DO UPDATE SET quantity = quantity + 1
-        ''', (user_id, item_id))
+            INSERT INTO cart (user_id, item_id, options, price) 
+            VALUES (?, ?, ?, ?)
+        ''', (user_id, item_id, options, price))
         await db.commit()
 
 async def get_cart(user_id: int):
     async with aiosqlite.connect(DB_NAME) as db:
         db.row_factory = aiosqlite.Row
         async with db.execute('''
-            SELECT i.name, i.price, c.quantity, i.id 
+            SELECT i.name, c.price, c.quantity, c.options, c.id 
             FROM cart c 
             JOIN items i ON c.item_id = i.id 
             WHERE c.user_id = ?

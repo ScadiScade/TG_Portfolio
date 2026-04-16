@@ -18,5 +18,12 @@ A currency converter bot that demonstrates:
 - Mandatory channel subscription check (Force Sub)
 - Message parsing and Regex matching
 
+### 3. [Telegram Mini App (TMA) 📱](./mini_app)
+A frontend Web App embedded inside Telegram that demonstrates:
+- **TypeScript & Vite** integration without heavy frameworks
+- Native styling using Telegram Theme Variables (`var(--tg-theme-bg-color)`)
+- Accessing user profile data natively
+- Triggering native Telegram popups and Main Button
+
 ---
 *Created to demonstrate skills and provide ready-to-use boilerplate for future freelance orders.*

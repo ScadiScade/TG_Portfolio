@@ -1,9 +1,8 @@
 <#
 .SYNOPSIS
-    Скрипт для быстрого запуска Telegram Showcase Bot на Windows.
+    Script for quick launch of Telegram Showcase Bot on Windows.
 .DESCRIPTION
-    Этот скрипт проверяет наличие виртуального окружения (venv),
-    создает его при необходимости, устанавливает зависимости и запускает бота.
+    This script checks for venv, creates it if necessary, installs deps and runs the bot.
 #>
 
 $ScriptPath = $MyInvocation.MyCommand.Path
@@ -11,47 +10,41 @@ $BotDirectory = Split-Path -Parent $ScriptPath
 Set-Location $BotDirectory
 
 Write-Host "=========================================" -ForegroundColor Cyan
-Write-Host "🤖 Запуск Telegram Showcase Bot" -ForegroundColor Cyan
+Write-Host "Bot Launch Sequence" -ForegroundColor Cyan
 Write-Host "=========================================" -ForegroundColor Cyan
 
-# Проверка файла .env
 if (-not (Test-Path ".env")) {
-    Write-Host "⚠️ Файл .env не найден! Создаю из .env.example..." -ForegroundColor Yellow
+    Write-Host "Warning: .env not found! Copying from .env.example..." -ForegroundColor Yellow
     if (Test-Path ".env.example") {
         Copy-Item ".env.example" ".env"
-        Write-Host "✅ Создан файл .env. Пожалуйста, откройте его и впишите свой BOT_TOKEN." -ForegroundColor Green
-        Write-Host "Запуск отменен, так как нужно настроить токен." -ForegroundColor Red
+        Write-Host "Created .env. Please edit it and put your BOT_TOKEN." -ForegroundColor Green
         Pause
         exit
     } else {
-        Write-Host "❌ Ошибка: Файл .env.example не найден!" -ForegroundColor Red
+        Write-Host "Error: .env.example not found!" -ForegroundColor Red
         Pause
         exit
     }
 } else {
-    # Проверка, не остался ли дефолтный токен
     $envContent = Get-Content ".env" | Out-String
     if ($envContent -match "YOUR_TELEGRAM_BOT_TOKEN_HERE") {
-        Write-Host "❌ Ошибка: В файле .env не указан реальный BOT_TOKEN!" -ForegroundColor Red
-        Write-Host "Пожалуйста, откройте файл .env и замените YOUR_TELEGRAM_BOT_TOKEN_HERE на токен от @BotFather." -ForegroundColor Yellow
+        Write-Host "Error: Real BOT_TOKEN not set in .env file." -ForegroundColor Red
         Pause
         exit
     }
 }
 
-# Настройка виртуального окружения
 if (-not (Test-Path "venv")) {
-    Write-Host "📦 Создание виртуального окружения Python (venv)..." -ForegroundColor Cyan
+    Write-Host "Creating Python virtual environment..." -ForegroundColor Cyan
     python -m venv venv
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "❌ Ошибка при создании виртуального окружения! Убедитесь, что Python установлен." -ForegroundColor Red
+        Write-Host "Error creating virtual environment!" -ForegroundColor Red
         Pause
         exit
     }
 }
 
-Write-Host "🔄 Активация виртуального окружения..." -ForegroundColor Cyan
-# Обход политики выполнения скриптов (Execution Policy) только для этого процесса, если нужно
+Write-Host "Activating virtual environment..." -ForegroundColor Cyan
 $currentPolicy = Get-ExecutionPolicy
 if ($currentPolicy -eq "Restricted") {
     Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
@@ -59,21 +52,22 @@ if ($currentPolicy -eq "Restricted") {
 
 . ".\venv\Scripts\Activate.ps1"
 
-Write-Host "📥 Проверка и установка зависимостей из requirements.txt..." -ForegroundColor Cyan
+Write-Host "Installing dependencies..." -ForegroundColor Cyan
+$env:PYO3_USE_ABI3_FORWARD_COMPATIBILITY="1"
 pip install -r requirements.txt --quiet
 
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "✅ Все зависимости установлены." -ForegroundColor Green
+    Write-Host "Dependencies installed successfully." -ForegroundColor Green
 } else {
-    Write-Host "⚠️ Внимание: Возможно, не все зависимости установились." -ForegroundColor Yellow
+    Write-Host "Warning: Some dependencies might not have installed." -ForegroundColor Yellow
 }
 
-Write-Host "🚀 Запуск бота..." -ForegroundColor Green
-Write-Host "Для остановки бота нажмите Ctrl+C" -ForegroundColor Yellow
+Write-Host "Starting bot..." -ForegroundColor Green
+Write-Host "Press Ctrl+C to stop." -ForegroundColor Yellow
 Write-Host "-----------------------------------------" -ForegroundColor Cyan
 
 python bot.py
 
 Write-Host "-----------------------------------------" -ForegroundColor Cyan
-Write-Host "🛑 Бот остановлен." -ForegroundColor Yellow
+Write-Host "Bot stopped." -ForegroundColor Yellow
 Pause

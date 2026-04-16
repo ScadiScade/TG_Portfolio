@@ -4,7 +4,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.fsm.context import FSMContext
 
 import db
-from handlers.common import get_main_menu_keyboard
+from handlers.common import get_main_menu_keyboard, get_user_language
 from locales import get_text
 
 router = Router()
@@ -19,7 +19,7 @@ def get_shop_keyboard(lang: str):
 
 @router.callback_query(F.data == "demo_shop")
 async def start_shop(callback: CallbackQuery, state: FSMContext):
-    lang = callback.from_user.language_code
+    lang = await get_user_language(callback.from_user)
     await state.clear()
     await callback.message.edit_text(
         get_text("shop_welcome", lang),
@@ -29,7 +29,7 @@ async def start_shop(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data == "shop_catalog")
 async def show_catalog(callback: CallbackQuery):
-    lang = callback.from_user.language_code
+    lang = await get_user_language(callback.from_user)
     items = await db.get_items()
     if not items:
         await callback.message.edit_text(get_text("catalog_empty", lang), reply_markup=get_shop_keyboard(lang))
@@ -46,7 +46,7 @@ async def show_catalog(callback: CallbackQuery):
 
 @router.callback_query(F.data.startswith("shop_item_"))
 async def show_item(callback: CallbackQuery):
-    lang = callback.from_user.language_code
+    lang = await get_user_language(callback.from_user)
     item_id = int(callback.data.split("_")[2])
     item = await db.get_item(item_id)
     
@@ -64,14 +64,14 @@ async def show_item(callback: CallbackQuery):
 
 @router.callback_query(F.data.startswith("shop_add_"))
 async def add_to_cart(callback: CallbackQuery):
-    lang = callback.from_user.language_code
+    lang = await get_user_language(callback.from_user)
     item_id = int(callback.data.split("_")[2])
     await db.add_to_cart(callback.from_user.id, item_id)
     await callback.answer(get_text("added_to_cart", lang), show_alert=True)
 
 @router.callback_query(F.data == "shop_cart")
 async def show_cart(callback: CallbackQuery):
-    lang = callback.from_user.language_code
+    lang = await get_user_language(callback.from_user)
     cart_items = await db.get_cart(callback.from_user.id)
     
     if not cart_items:
@@ -97,14 +97,14 @@ async def show_cart(callback: CallbackQuery):
 
 @router.callback_query(F.data == "shop_clear_cart")
 async def clear_cart(callback: CallbackQuery):
-    lang = callback.from_user.language_code
+    lang = await get_user_language(callback.from_user)
     await db.clear_cart(callback.from_user.id)
     await callback.answer(get_text("cart_cleared", lang))
     await start_shop(callback, FSMContext(storage=None, key=None))
 
 @router.callback_query(F.data == "shop_checkout")
 async def checkout(callback: CallbackQuery):
-    lang = callback.from_user.language_code
+    lang = await get_user_language(callback.from_user)
     await db.clear_cart(callback.from_user.id)
     await callback.message.edit_text(
         get_text("checkout_success", lang),
@@ -113,7 +113,7 @@ async def checkout(callback: CallbackQuery):
 
 @router.callback_query(F.data == "back_main")
 async def back_to_main(callback: CallbackQuery, state: FSMContext):
-    lang = callback.from_user.language_code
+    lang = await get_user_language(callback.from_user)
     await state.clear()
     await callback.message.edit_text(
         get_text("welcome_back", lang),

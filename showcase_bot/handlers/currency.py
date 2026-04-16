@@ -6,7 +6,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 
 from api_client import ExchangeAPIClient
-from handlers.common import get_main_menu_keyboard
+from handlers.common import get_main_menu_keyboard, get_user_language
 from locales import get_text
 
 router = Router()
@@ -22,7 +22,7 @@ def get_cancel_keyboard(lang: str):
 
 @router.callback_query(F.data == "demo_currency")
 async def start_currency(callback: CallbackQuery, state: FSMContext):
-    lang = callback.from_user.language_code
+    lang = await get_user_language(callback.from_user)
     await state.set_state(CurrencyState.waiting_for_amount)
     
     await callback.message.edit_text(
@@ -33,7 +33,7 @@ async def start_currency(callback: CallbackQuery, state: FSMContext):
 
 @router.message(CurrencyState.waiting_for_amount)
 async def process_currency_input(message: Message, state: FSMContext):
-    lang = message.from_user.language_code
+    lang = await get_user_language(message.from_user)
     text = message.text.upper()
     
     # Matches: 100 USD TO EUR, 100 USD В EUR, 100 USD EUR

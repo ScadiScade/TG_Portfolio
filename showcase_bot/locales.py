@@ -1,0 +1,69 @@
+TEXTS = {
+    "ru": {
+        "main_welcome": "👋 Добро пожаловать в **Бот-Визитку**!\n\nЗдесь вы можете посмотреть различные функции, которые я могу разработать для вашего бизнеса:\n1️⃣ **Демо магазина**: E-commerce с корзиной и каталогом.\n2️⃣ **Демо API**: Интеграция стороннего REST API (Конвертер валют) с FSM.\n3️⃣ **Демо Web App (TMA)**: Фронтенд Telegram Mini App на TypeScript.\n\nВыберите демо ниже, чтобы начать:",
+        "btn_shop": "🛒 Демо: Магазин",
+        "btn_api": "💱 Демо: Конвертер (API)",
+        "btn_tma": "📱 Демо: Web App (TMA)",
+        "shop_welcome": "🛒 **Демо Магазина**\n\nЗдесь вы можете просматривать динамический каталог, добавлять товары в корзину и переходить к симуляции оформления заказа. Все сохраняется в SQLite.",
+        "btn_catalog": "🛍 Каталог",
+        "btn_cart": "🛒 Корзина",
+        "btn_back_main": "🔙 На главную",
+        "catalog_empty": "Каталог пуст.",
+        "select_item": "Пожалуйста, выберите товар:",
+        "btn_back_shop": "🔙 Назад в магазин",
+        "item_not_found": "Товар не найден.",
+        "btn_add_cart": "➕ В корзину",
+        "added_to_cart": "Товар добавлен в корзину! 🛒",
+        "cart_empty": "Ваша корзина пуста.",
+        "cart_header": "🛒 **Ваша Корзина**:\n\n",
+        "cart_total": "\n**Итого: ${total}**",
+        "btn_checkout": "💳 Оформить заказ",
+        "btn_clear_cart": "🗑 Очистить корзину",
+        "cart_cleared": "Корзина очищена.",
+        "checkout_success": "🎉 Спасибо за ваш заказ! (Демо режим)\n\nВаш заказ был записан. В реальном боте здесь будет перенаправление на платежную систему.",
+        "welcome_back": "👋 С возвращением в Главное Меню!\n\nВыберите демо ниже:",
+        "btn_cancel": "❌ Отмена и Назад",
+        "currency_welcome": "💱 **Демо API Конвертера**\n\nЭто демо использует `aiohttp` и FSM (Машину состояний).\nПожалуйста, отправьте мне сумму и валюты для конвертации в таком формате:\n\n`<Сумма> <Из> в <В>`\n\nПример: `100 USD в EUR`",
+        "invalid_format": "❌ Неверный формат.\n\nПожалуйста, используйте: `<Сумма> <Из> в <В>`\nПример: `100 USD в EUR`\n\nИли нажмите отмену:",
+        "converting": "⏳ Конвертирую через API...",
+        "api_error": "❌ Не удалось получить курсы валют. Пожалуйста, проверьте правильность кодов.",
+        "exchange_result": "💱 **Результат обмена**\n\nИз: `{amount} {from_curr}`\nВ: `{result} {to_curr}`\n\nОтправьте другую сумму или вернитесь назад:"
+    },
+    "en": {
+        "main_welcome": "👋 Welcome to my **Portfolio Bot**!\n\nHere you can see different features that I can build for your business:\n1️⃣ **Shop Demo**: E-commerce with cart and inline catalogs.\n2️⃣ **API Demo**: Third-party REST API integration (Currency) with FSM.\n3️⃣ **Web App Demo**: Frontend Telegram Mini App on TypeScript.\n\nSelect a demo below to start:",
+        "btn_shop": "🛒 Demo: Shop",
+        "btn_api": "💱 Demo: API Converter",
+        "btn_tma": "📱 Demo: Web App (TMA)",
+        "shop_welcome": "🛒 **Shop Demo**\n\nHere you can browse a dynamic catalog, add items to a cart, and proceed to a simulated checkout. Everything is saved in SQLite.",
+        "btn_catalog": "🛍 Catalog",
+        "btn_cart": "🛒 Cart",
+        "btn_back_main": "🔙 Back to Main",
+        "catalog_empty": "Catalog is empty.",
+        "select_item": "Please select an item:",
+        "btn_back_shop": "🔙 Back to Shop",
+        "item_not_found": "Item not found.",
+        "btn_add_cart": "➕ Add to Cart",
+        "added_to_cart": "Item added to cart! 🛒",
+        "cart_empty": "Your cart is empty.",
+        "cart_header": "🛒 **Your Cart**:\n\n",
+        "cart_total": "\n**Total: ${total}**",
+        "btn_checkout": "💳 Checkout",
+        "btn_clear_cart": "🗑 Clear Cart",
+        "cart_cleared": "Cart cleared.",
+        "checkout_success": "🎉 Thank you for your order! (Demo mode)\n\nYour order has been recorded. In a real bot, you would be redirected to a payment provider.",
+        "welcome_back": "👋 Welcome back to the Main Menu!\n\nSelect a demo below:",
+        "btn_cancel": "❌ Cancel & Back",
+        "currency_welcome": "💱 **Currency API Demo**\n\nThis demo uses `aiohttp` and FSM (Finite State Machine).\nPlease send me the amount and currencies you want to convert in this format:\n\n`<Amount> <From> to <To>`\n\nExample: `100 USD to EUR`",
+        "invalid_format": "❌ Invalid format.\n\nPlease use: `<Amount> <From> to <To>`\nExample: `100 USD to EUR`\n\nOr click cancel:",
+        "converting": "⏳ Converting via API...",
+        "api_error": "❌ Failed to get exchange rates. Please check if the currency codes are correct.",
+        "exchange_result": "💱 **Exchange Result**\n\nFrom: `{amount} {from_curr}`\nTo: `{result} {to_curr}`\n\nSend another amount or go back:"
+    }
+}
+
+def get_text(key: str, lang_code: str = "ru", **kwargs) -> str:
+    lang = lang_code if lang_code in TEXTS else "ru"
+    text = TEXTS[lang].get(key, TEXTS["ru"].get(key, key))
+    if kwargs:
+        return text.format(**kwargs)
+    return text

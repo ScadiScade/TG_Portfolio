@@ -7,6 +7,7 @@ from aiogram.fsm.context import FSMContext
 
 from api_client import ExchangeAPIClient
 from handlers.common import get_main_menu_keyboard
+from locales import get_text
 
 router = Router()
 api = ExchangeAPIClient()
@@ -14,58 +15,53 @@ api = ExchangeAPIClient()
 class CurrencyState(StatesGroup):
     waiting_for_amount = State()
 
-def get_cancel_keyboard():
+def get_cancel_keyboard(lang: str):
     builder = InlineKeyboardBuilder()
-    builder.button(text="❌ Cancel & Back", callback_data="back_main")
+    builder.button(text=get_text("btn_cancel", lang), callback_data="back_main")
     return builder.as_markup()
 
 @router.callback_query(F.data == "demo_currency")
 async def start_currency(callback: CallbackQuery, state: FSMContext):
+    lang = callback.from_user.language_code
     await state.set_state(CurrencyState.waiting_for_amount)
     
     await callback.message.edit_text(
-        "💱 **Currency API Demo**\n\n"
-        "This demo uses `aiohttp` and FSM (Finite State Machine).\n"
-        "Please send me the amount and currencies you want to convert in this format:\n\n"
-        "`<Amount> <From> to <To>`\n\n"
-        "Example: `100 USD to EUR`",
+        get_text("currency_welcome", lang),
         parse_mode="Markdown",
-        reply_markup=get_cancel_keyboard()
+        reply_markup=get_cancel_keyboard(lang)
     )
 
 @router.message(CurrencyState.waiting_for_amount)
 async def process_currency_input(message: Message, state: FSMContext):
+    lang = message.from_user.language_code
     text = message.text.upper()
     
-    match = re.search(r'(\d+(?:\.\d+)?)\s*([A-Z]{3})(?:\s+TO\s+|\s+)([A-Z]{3})', text)
+    # Matches: 100 USD TO EUR, 100 USD В EUR, 100 USD EUR
+    match = re.search(r'(\d+(?:\.\d+)?)\s*([A-Z]{3})(?:\s+(?:TO|В)\s+|\s+)([A-Z]{3})', text, re.IGNORECASE)
     if not match:
         await message.answer(
-            "❌ Invalid format.\n\nPlease use: `<Amount> <From> to <To>`\n"
-            "Example: `100 USD to EUR`\n\nOr click cancel:",
+            get_text("invalid_format", lang),
             parse_mode="Markdown",
-            reply_markup=get_cancel_keyboard()
+            reply_markup=get_cancel_keyboard(lang)
         )
         return
         
     amount_str, from_curr, to_curr = match.groups()
     amount = float(amount_str)
     
-    msg = await message.answer("⏳ Converting via API...", reply_markup=get_cancel_keyboard())
+    msg = await message.answer(get_text("converting", lang), reply_markup=get_cancel_keyboard(lang))
     
     result = await api.convert(amount, from_curr, to_curr)
     
     if result is None:
         await msg.edit_text(
-            "❌ Failed to get exchange rates. Please check if the currency codes are correct.",
-            reply_markup=get_cancel_keyboard()
+            get_text("api_error", lang),
+            reply_markup=get_cancel_keyboard(lang)
         )
         return
         
     await msg.edit_text(
-        f"💱 **Exchange Result**\n\n"
-        f"From: `{amount} {from_curr}`\n"
-        f"To: `{result} {to_curr}`\n\n"
-        f"Send another amount or go back:",
+        get_text("exchange_result", lang, amount=amount, from_curr=from_curr, result=result, to_curr=to_curr),
         parse_mode="Markdown",
-        reply_markup=get_cancel_keyboard()
+        reply_markup=get_cancel_keyboard(lang)
     )

@@ -29,6 +29,11 @@ def get_shop_keyboard(lang: str):
     builder.adjust(2, 1)
     return builder.as_markup()
 
+def format_price(amount: int, lang: str) -> str:
+    if lang == "en":
+        return f"${amount // 50}"
+    return f"{amount} ₽"
+
 @router.callback_query(F.data == "demo_shop")
 async def start_shop(callback: CallbackQuery, state: FSMContext):
     lang = await get_user_language(callback.from_user)
@@ -51,7 +56,9 @@ async def show_catalog(callback: CallbackQuery, state: FSMContext):
 
     builder = InlineKeyboardBuilder()
     for item in items:
-        builder.button(text=f"{item['name']} - {item['price']}", callback_data=f"shop_item_{item['id']}")
+        item_name = get_text(item['name'], lang)
+        price_str = format_price(item['price'], lang)
+        builder.button(text=f"{item_name} - {price_str}", callback_data=f"shop_item_{item['id']}")
     
     builder.button(text=get_text("btn_back_shop", lang), callback_data="demo_shop")
     builder.adjust(1)
@@ -73,13 +80,17 @@ async def render_item_menu(message, item, selected_options, lang):
         builder.button(text=btn_text, callback_data=f"shop_toggle_{opt_key}")
     
     builder.button(
-        text=get_text("btn_add_cart", lang, total=total_price),
+        text=get_text("btn_add_cart", lang, total=format_price(total_price, lang).replace(" ₽", "").replace("$", "")),
         callback_data="shop_do_add"
     )
     builder.button(text=get_text("btn_catalog", lang), callback_data="shop_catalog")
     builder.adjust(1)
     
-    text = f"**{item['name']}**\n\n{item['description']}\n\nPrice: {item['price']}"
+    item_name = get_text(item['name'], lang)
+    item_desc = get_text(item['description'], lang)
+    price_str = format_price(item['price'], lang)
+    
+    text = f"**{item_name}**\n\n{item_desc}\n\nЦена / Price: {price_str}"
     await message.edit_text(text, parse_mode="Markdown", reply_markup=builder.as_markup())
 
 @router.callback_query(F.data.startswith("shop_item_"))
@@ -151,9 +162,12 @@ async def show_cart(callback: CallbackQuery):
         cost = item['price'] * item['quantity']
         total += cost
         opts = item['options'] or ""
-        text += get_text("cart_item", lang, name=item['name'], options=opts, quantity=item['quantity'], cost=cost)
+        item_name = get_text(item['name'], lang)
+        cost_str = format_price(cost, lang).replace(" ₽", "").replace("$", "")
+        text += get_text("cart_item", lang, name=item_name, options=opts, quantity=item['quantity'], cost=cost_str)
         
-    text += get_text("cart_total", lang, total=total)
+    total_str = format_price(total, lang).replace(" ₽", "").replace("$", "")
+    text += get_text("cart_total", lang, total=total_str)
     
     builder = InlineKeyboardBuilder()
     builder.button(text=get_text("btn_checkout", lang), callback_data="shop_checkout")

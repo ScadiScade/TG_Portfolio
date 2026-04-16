@@ -35,7 +35,21 @@ TEXTS = {
         "converting": "⏳ Конвертирую через API...",
         "api_error": "❌ Не удалось получить курсы валют. Пожалуйста, проверьте правильность кодов.",
         "exchange_result": "💱 **Результат обмена**\n\nИз: `{amount} {from_curr}`\nВ: `{result} {to_curr}`\n\nОтправьте другую сумму или вернитесь назад:",
-        "order_received": "🎉 **Спасибо за интерес!**\n\nЯ получил вашу заявку на разработку: **{service}**.\n\n(В реальном боте здесь менеджер связался бы с клиентом)"
+        "order_received": "🎉 **Спасибо за интерес!**\n\nЯ получил вашу заявку на разработку: **{service}**.\n\n(В реальном боте здесь менеджер связался бы с клиентом)",
+        
+        "bot_basic": "Базовый Telegram Бот",
+        "bot_shop": "Бот-Магазин",
+        "tma": "Telegram Mini App",
+        "web_landing": "Landing Page (Сайт)",
+        "web_full": "Fullstack Сайт",
+        
+        "desc_bot_basic": "Простой бот с меню и логикой",
+        "desc_bot_shop": "Полноценный магазин с корзиной и БД",
+        "desc_tma": "Интерактивное Web-приложение в Telegram",
+        "desc_web_landing": "Современный одностраничный сайт",
+        "desc_web_full": "Сложный сайт с бэкендом и базами данных",
+        
+        "price_format": "{price} ₽"
     },
     "en": {
         "main_welcome": "👋 Welcome to my **Portfolio Bot**!\n\nHere you can see different features that I can build for your business:\n1️⃣ **Shop Demo**: E-commerce with cart and inline catalogs.\n2️⃣ **API Demo**: Third-party REST API integration (Currency) with FSM.\n3️⃣ **Web App Demo**: Frontend Telegram Mini App on TypeScript.\n\nSelect a demo below to start:",
@@ -73,7 +87,21 @@ TEXTS = {
         "converting": "⏳ Converting via API...",
         "api_error": "❌ Failed to get exchange rates. Please check if the currency codes are correct.",
         "exchange_result": "💱 **Exchange Result**\n\nFrom: `{amount} {from_curr}`\nTo: `{result} {to_curr}`\n\nSend another amount or go back:",
-        "order_received": "🎉 **Thank you for your interest!**\n\nI have received your request for: **{service}**.\n\n(In a real bot, a manager would contact the client here)"
+        "order_received": "🎉 **Thank you for your interest!**\n\nI have received your request for: **{service}**.\n\n(In a real bot, a manager would contact the client here)",
+        
+        "bot_basic": "Basic Telegram Bot",
+        "bot_shop": "E-commerce Bot",
+        "tma": "Telegram Mini App",
+        "web_landing": "Landing Page",
+        "web_full": "Fullstack Website",
+        
+        "desc_bot_basic": "Simple bot with basic logic and menus",
+        "desc_bot_shop": "Full shop with cart and database",
+        "desc_tma": "Interactive Web App inside Telegram",
+        "desc_web_landing": "Modern responsive single page website",
+        "desc_web_full": "Complex site with backend & DB",
+        
+        "price_format": "${price}"
     }
 }
 

@@ -34,11 +34,11 @@ async def init_db():
                 await db.executemany(
                     'INSERT INTO items (name, description, price) VALUES (?, ?, ?)',
                     [
-                        ('Telegram Bot (Basic)', 'Simple bot logic', 1000),
-                        ('Shop Bot', 'Fully functional e-commerce', 5000),
-                        ('Web App (TMA)', 'Interactive Mini App', 8000),
-                        ('Website / Landing', 'Single page website or landing page', 10000),
-                        ('Fullstack Website', 'Complex website with backend and database', 25000)
+                        ('bot_basic', 'desc_bot_basic', 5000),
+                        ('bot_shop', 'desc_bot_shop', 15000),
+                        ('tma', 'desc_tma', 25000),
+                        ('web_landing', 'desc_web_landing', 20000),
+                        ('web_full', 'desc_web_full', 50000)
                     ]
                 )
         await db.commit()

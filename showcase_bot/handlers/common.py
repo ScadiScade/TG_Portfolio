@@ -1,3 +1,4 @@
+import json
 from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery, WebAppInfo
@@ -48,3 +49,18 @@ async def change_language(callback: CallbackQuery):
         parse_mode="Markdown",
         reply_markup=get_main_menu_keyboard(new_lang)
     )
+
+@router.message(F.web_app_data)
+async def web_app_data_handler(message: Message):
+    lang = await get_user_language(message.from_user)
+    
+    try:
+        data = json.loads(message.web_app_data.data)
+        if data.get('action') == 'order_service':
+            service_title = data.get('service_title', 'Unknown Service')
+            await message.answer(
+                get_text("order_received", lang, service=service_title),
+                parse_mode="Markdown"
+            )
+    except json.JSONDecodeError:
+        pass

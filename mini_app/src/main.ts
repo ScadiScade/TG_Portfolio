@@ -2,98 +2,110 @@ import './style.css';
 
 // Initialize Telegram Web App
 const tg = window.Telegram.WebApp;
-
-// Expand to full height
 tg.expand();
-
-// Tell Telegram that the Mini App is ready
 tg.ready();
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 const user = tg.initDataUnsafe?.user;
-
 const lang = user?.language_code === 'ru' ? 'ru' : 'en';
 
 const i18n = {
   en: {
-    welcome: 'Welcome, {name}! 🚀',
-    guest: 'Guest',
-    subtitle: 'This is a portfolio Telegram Mini App (TMA) built with TypeScript.',
-    profile: 'Your Telegram Profile',
-    unknown: 'Unknown',
-    yes: 'Yes ⭐',
-    no: 'No',
-    btnSend: 'Send Data back to Bot',
-    btnTheme: 'Check Current Theme',
-    confirmSend: 'Do you want to send action data to the bot?',
-    alertTheme: 'You are using {theme} theme!',
-    mainBtn: 'NATIVE MAIN BUTTON',
-    alertMainBtn: 'Native MainButton clicked!'
+    welcome: 'Welcome, {name}!',
+    subtitle: 'Select the service you want to order:',
+    services: [
+      { id: 'bot_basic', title: 'Basic Telegram Bot', desc: 'Simple bot with basic logic and menus', price: '$100' },
+      { id: 'bot_shop', title: 'E-commerce Bot', desc: 'Full shop with cart and database', price: '$300' },
+      { id: 'tma', title: 'Telegram Mini App', desc: 'Interactive Web App inside Telegram', price: '$500' },
+      { id: 'web_landing', title: 'Landing Page', desc: 'Modern responsive single page website', price: '$400' },
+      { id: 'web_full', title: 'Fullstack Website', desc: 'Complex site with backend & DB', price: '$1000+' }
+    ],
+    orderBtn: 'Order Selected',
+    confirm: 'Do you want to order "{service}"?',
+    selectFirst: 'Please select a service first!'
   },
   ru: {
-    welcome: 'Добро пожаловать, {name}! 🚀',
-    guest: 'Гость',
-    subtitle: 'Это портфолио Telegram Mini App (TMA), написанное на TypeScript.',
-    profile: 'Ваш профиль Telegram',
-    unknown: 'Неизвестно',
-    yes: 'Да ⭐',
-    no: 'Нет',
-    btnSend: 'Отправить данные боту',
-    btnTheme: 'Проверить текущую тему',
-    confirmSend: 'Вы хотите отправить данные боту?',
-    alertTheme: 'Вы используете тему: {theme}!',
-    mainBtn: 'НАТИВНАЯ КНОПКА',
-    alertMainBtn: 'Нативная кнопка была нажата!'
+    welcome: 'Добро пожаловать, {name}!',
+    subtitle: 'Выберите услугу для заказа:',
+    services: [
+      { id: 'bot_basic', title: 'Базовый Telegram Бот', desc: 'Простой бот с меню и логикой', price: 'от 5000 ₽' },
+      { id: 'bot_shop', title: 'Бот-Магазин', desc: 'Полноценный магазин с корзиной и БД', price: 'от 15000 ₽' },
+      { id: 'tma', title: 'Telegram Mini App', desc: 'Интерактивное Web-приложение в Telegram', price: 'от 25000 ₽' },
+      { id: 'web_landing', title: 'Landing Page (Сайт)', desc: 'Современный одностраничный сайт', price: 'от 20000 ₽' },
+      { id: 'web_full', title: 'Fullstack Сайт', desc: 'Сложный сайт с бэкендом и базами данных', price: 'от 50000 ₽' }
+    ],
+    orderBtn: 'Заказать выбранное',
+    confirm: 'Вы хотите заказать "{service}"?',
+    selectFirst: 'Пожалуйста, выберите услугу!'
   }
 };
 
 const t = i18n[lang];
-const userName = user?.first_name || t.guest;
+const userName = user?.first_name || (lang === 'ru' ? 'Гость' : 'Guest');
 
-app.innerHTML = `
-  <div class="container">
-    <div class="header">
-      <h1>${t.welcome.replace('{name}', userName)}</h1>
-      <p class="subtitle">${t.subtitle}</p>
-    </div>
-    
-    <div class="card">
-      <h3>${t.profile}</h3>
-      <ul>
-        <li><strong>ID:</strong> ${user?.id || t.unknown}</li>
-        <li><strong>Username:</strong> ${user?.username ? '@' + user.username : t.unknown}</li>
-        <li><strong>Language:</strong> ${user?.language_code || t.unknown}</li>
-        <li><strong>Premium:</strong> ${user?.is_premium ? t.yes : t.no}</li>
-      </ul>
-    </div>
+let selectedService: string | null = null;
+let selectedTitle: string | null = null;
 
-    <div class="actions">
-      <button id="main-btn" class="btn primary">${t.btnSend}</button>
-      <button id="theme-btn" class="btn secondary">${t.btnTheme}</button>
+const renderApp = () => {
+  app.innerHTML = `
+    <div class="container">
+      <div class="header">
+        <h1>${t.welcome.replace('{name}', userName)}</h1>
+        <p class="subtitle">${t.subtitle}</p>
+      </div>
+      
+      <div class="services-list">
+        ${t.services.map(s => `
+          <div class="service-card" data-id="${s.id}" data-title="${s.title}">
+            <div class="service-info">
+              <h3>${s.title}</h3>
+              <p>${s.desc}</p>
+            </div>
+            <div class="service-price">${s.price}</div>
+          </div>
+        `).join('')}
+      </div>
     </div>
-  </div>
-`;
+  `;
 
-// Setup Event Listeners
-const mainBtn = document.querySelector<HTMLButtonElement>('#main-btn');
-mainBtn?.addEventListener('click', () => {
-  // Show Telegram native confirmation
-  tg.showConfirm(t.confirmSend, (confirmed) => {
+  // Attach click events
+  document.querySelectorAll('.service-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      // Remove selected from all
+      document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+      // Add selected to clicked
+      const target = e.currentTarget as HTMLDivElement;
+      target.classList.add('selected');
+      
+      selectedService = target.dataset.id || null;
+      selectedTitle = target.dataset.title || null;
+
+      // Update Main Button
+      if (selectedService) {
+        tg.MainButton.setText(t.orderBtn);
+        tg.MainButton.show();
+      }
+    });
+  });
+};
+
+renderApp();
+
+// Handle Main Button Click
+tg.MainButton.onClick(() => {
+  if (!selectedService || !selectedTitle) {
+    tg.showAlert(t.selectFirst);
+    return;
+  }
+
+  tg.showConfirm(t.confirm.replace('{service}', selectedTitle), (confirmed) => {
     if (confirmed) {
-      // Send data back to the bot (only works if opened via keyboard button)
-      tg.sendData(JSON.stringify({ action: 'checkout', status: 'success' }));
+      // Send data to Telegram Bot
+      tg.sendData(JSON.stringify({ 
+        action: 'order_service', 
+        service_id: selectedService,
+        service_title: selectedTitle
+      }));
     }
   });
 });
-
-const themeBtn = document.querySelector<HTMLButtonElement>('#theme-btn');
-themeBtn?.addEventListener('click', () => {
-  tg.showAlert(t.alertTheme.replace('{theme}', tg.colorScheme));
-});
-
-// Use MainButton from Telegram UI
-tg.MainButton.setText(t.mainBtn);
-tg.MainButton.onClick(() => {
-  tg.showAlert(t.alertMainBtn);
-});
-tg.MainButton.show();

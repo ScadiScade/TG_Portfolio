@@ -34,7 +34,9 @@ async def init_db():
                     [
                         ('Telegram Bot (Basic)', 'Simple bot logic', 1000),
                         ('Shop Bot', 'Fully functional e-commerce', 5000),
-                        ('Web App (TMA)', 'Interactive Mini App', 8000)
+                        ('Web App (TMA)', 'Interactive Mini App', 8000),
+                        ('Website / Landing', 'Single page website or landing page', 10000),
+                        ('Fullstack Website', 'Complex website with backend and database', 25000)
                     ]
                 )
         await db.commit()

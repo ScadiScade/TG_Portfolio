@@ -2,28 +2,27 @@
 
 Welcome to my Telegram Bot Portfolio! 🚀
 
-This repository contains examples of Telegram bots built with **Python 3** and **aiogram 3.x**. These bots demonstrate different features that are highly requested by clients on freelance platforms.
+This repository contains examples of Telegram bots built with **Python 3**, **aiogram 3.x**, and **TypeScript**. 
 
-## Projects
+## 🌟 The Showcase Bot
+The best way to see my skills is to check out the **[Showcase Bot](./showcase_bot)**!
+It is a single, unified bot that demonstrates all the features requested by clients:
+1. **Shop Demo:** Dynamic catalogs, inline keyboards, cart system, and SQLite integration.
+2. **API Demo:** External REST API integration (currency converter) with FSM (Finite State Machine).
+3. **Web App (TMA) Demo:** A frontend Web App embedded directly into the bot.
+
+## Individual Projects (Source Code)
+
+If you want to see the isolated source code for each feature:
 
 ### 1. [Shop Bot 🛒](./bot_shop)
-An e-commerce bot template that shows:
-- Async Database integration (`aiosqlite`)
-- Dynamic catalog generation using Inline Keyboards
-- Cart management and checkout flow
+An isolated e-commerce bot template.
 
 ### 2. [API Bot 💱](./bot_api)
-A currency converter bot that demonstrates:
-- Third-party REST API integration (`aiohttp`)
-- Mandatory channel subscription check (Force Sub)
-- Message parsing and Regex matching
+An isolated API converter with Force-Subscription logic.
 
 ### 3. [Telegram Mini App (TMA) 📱](./mini_app)
-A frontend Web App embedded inside Telegram that demonstrates:
-- **TypeScript & Vite** integration without heavy frameworks
-- Native styling using Telegram Theme Variables (`var(--tg-theme-bg-color)`)
-- Accessing user profile data natively
-- Triggering native Telegram popups and Main Button
+The TypeScript / Vite source code for the Web App interface used in the Showcase bot.
 
 ---
 *Created to demonstrate skills and provide ready-to-use boilerplate for future freelance orders.*
